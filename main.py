@@ -40,44 +40,45 @@ def main():
 
     while True:
         success,image = cap.read()
-        flippedImg = cv2.flip(image, 1)
-        image = tracker.handsFinder(flippedImg)
-        lmList = tracker.positionFinder(image)
-        mpHands = tracker.getHandsModule()
-        if len(lmList) != 0:
-            #print(lmList[mpHands.HandLandmark.INDEX_FINGER_TIP])
-            _,xpos,ypos = lmList[mpHands.HandLandmark.INDEX_FINGER_TIP]
-            scaledX, scaledY = scaleToMonitor(xpos, ypos)
+        if success:
+            flippedImg = cv2.flip(image, 1)
+            image = tracker.handsFinder(flippedImg)
+            lmList = tracker.positionFinder(image)
+            mpHands = tracker.getHandsModule()
+            if len(lmList) != 0:
+                #print(lmList[mpHands.HandLandmark.INDEX_FINGER_TIP])
+                _,xpos,ypos = lmList[mpHands.HandLandmark.INDEX_FINGER_TIP]
+                scaledX, scaledY = scaleToMonitor(xpos, ypos)
 
-            ma_x.append(scaledX)
-            ma_y.append(scaledY)
+                ma_x.append(scaledX)
+                ma_y.append(scaledY)
 
-            # If moving average lists are longer than window size, remove oldest entry
-            if len(ma_x) > MA_WINDOW:
-                ma_x.pop(0)
-                ma_y.pop(0)
+                # If moving average lists are longer than window size, remove oldest entry
+                if len(ma_x) > MA_WINDOW:
+                    ma_x.pop(0)
+                    ma_y.pop(0)
 
-            # Calculate moving average cursor position
-            ma_x_avg = sum(ma_x) / len(ma_x)
-            ma_y_avg = sum(ma_y) / len(ma_y)
+                # Calculate moving average cursor position
+                ma_x_avg = sum(ma_x) / len(ma_x)
+                ma_y_avg = sum(ma_y) / len(ma_y)
 
-            # Move cursor to smoothed position
-            mouseMove(int(ma_x_avg), int(ma_y_avg))
-            # mouseMove(int(scaledX), int(scaledY))
+                # Move cursor to smoothed position
+                mouseMove(int(ma_x_avg), int(ma_y_avg))
+                # mouseMove(int(scaledX), int(scaledY))
 
-            _,x1,y1 = lmList[mpHands.HandLandmark.THUMB_TIP]
-            _,x2,y2 = lmList[mpHands.HandLandmark.MIDDLE_FINGER_PIP]
-            distance = math.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
-            print(distance)
-            if distance < 50:
-                CURRCLICK = datetime.now().second
-                #print("click")
-                if CURRCLICK - LASTCLICK > DEBOUNCETIME:
-                    LASTCLICK = CURRCLICK
-                    mouseClick(int(scaledX), int(scaledY))
-            
-        cv2.imshow(WINDOWNAME,image)    
-        cv2.waitKey(1)
+                _,x1,y1 = lmList[mpHands.HandLandmark.THUMB_TIP]
+                _,x2,y2 = lmList[mpHands.HandLandmark.MIDDLE_FINGER_PIP]
+                distance = math.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
+                print(distance)
+                if distance < 50:
+                    CURRCLICK = datetime.now().second
+                    #print("click")
+                    if CURRCLICK - LASTCLICK > DEBOUNCETIME:
+                        LASTCLICK = CURRCLICK
+                        mouseClick(int(scaledX), int(scaledY))
+                
+            cv2.imshow(WINDOWNAME,image)    
+            cv2.waitKey(1)
 
 if __name__ == "__main__":
     main()
